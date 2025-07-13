@@ -1,4 +1,4 @@
-# todo list
+# high level todo list
 - [x] learn and understand gokit documentation
 - [x] design
 - [x] choose db
@@ -9,3 +9,7 @@
 - [ ] write unit test
 - [ ] add grafana 
 - [ ] update readme 
+
+# micro level todos
+- [ ] remove errorf statement and add logger for pgsql db
+- [ ] 

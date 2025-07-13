@@ -1,0 +1,12 @@
+{
+    "app":{
+        
+    },
+    "pgsql":{
+        "maxconn":50,
+        "minconn":5,
+        "healthCheckPeriod":"30",
+        "maxConnLifetime":"30",
+        "maxConnIdleTime":"5"
+    }
+}
