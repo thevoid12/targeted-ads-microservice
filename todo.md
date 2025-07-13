@@ -1,0 +1,11 @@
+# todo list
+- [x] learn and understand gokit documentation
+- [x] design
+- [x] choose db
+- [x] choose a cache
+- [ ] insert random data
+- [ ] implement core go logic
+- [ ] implement updating cache when db changes
+- [ ] write unit test
+- [ ] add grafana 
+- [ ] update readme 
