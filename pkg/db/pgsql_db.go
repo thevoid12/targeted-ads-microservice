@@ -88,7 +88,9 @@ func InitDB() (*Dbconn, error) {
 		if !exists {
 			log.Printf("Database %s does not exist. Creating it...", config.Name)
 			if err := createDatabase(ctx, conn, config.Name); err != nil {
+
 				dbErr = fmt.Errorf("failed to create database: %v", err)
+				log.Fatalf("Error creating database: %v", dbErr)
 				return
 			}
 			log.Println("Database created successfully!")
@@ -101,11 +103,11 @@ func InitDB() (*Dbconn, error) {
 			return
 		}
 
-		poolConfig.MaxConns = viper.GetInt32("db.maxconn")
-		poolConfig.MinConns = viper.GetInt32("db.minconn")
-		poolConfig.HealthCheckPeriod = time.Duration(viper.GetInt32("healthCheckPeriod")) * time.Second
-		poolConfig.MaxConnLifetime = time.Duration(viper.GetInt32("maxConnLifetime")) * time.Minute
-		poolConfig.MaxConnIdleTime = time.Duration(viper.GetInt32("maxConnIdleTime")) * time.Minute
+		poolConfig.MaxConns = viper.GetInt32("pgsql.maxconn")
+		poolConfig.MinConns = viper.GetInt32("pgsql.minconn")
+		poolConfig.HealthCheckPeriod = time.Duration(viper.GetInt32("pgsql.healthCheckPeriod")) * time.Second
+		poolConfig.MaxConnLifetime = time.Duration(viper.GetInt32("pgsql.maxConnLifetime")) * time.Minute
+		poolConfig.MaxConnIdleTime = time.Duration(viper.GetInt32("pgsql.maxConnIdleTime")) * time.Minute
 
 		pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 		if err != nil {

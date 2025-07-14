@@ -1,0 +1,16 @@
+
+services:
+  # PostgreSQL service
+  db:
+    image: postgres:15
+    container_name: targeted_ads_db
+    env_file:
+      - ../.env
+    volumes:
+      - pg_data:/var/lib/postgresql/data 
+    ports:
+      - "15433:5432" # Exposing port to access it externally <host_port>:<container_port>
+    restart: unless-stopped
+
+volumes:
+  pg_data: # for pgdata to persist beyond container lifecycle

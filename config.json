@@ -1,6 +1,6 @@
 {
     "app":{
-        
+        "env":".env"
     },
     "pgsql":{
         "maxconn":50,
