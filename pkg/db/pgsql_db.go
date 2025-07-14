@@ -122,6 +122,9 @@ func InitDB() (*Dbconn, error) {
 	return dbConn, dbErr
 }
 
+func GetConn() *Dbconn {
+	return dbConn
+}
 func databaseExists(ctx context.Context, conn *pgx.Conn, name string) (bool, error) {
 	var exists bool
 	err := conn.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname=$1)", name).Scan(&exists)

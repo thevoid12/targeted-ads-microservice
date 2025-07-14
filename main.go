@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	dbpkg "targetad/pkg/db"
+	"targetad/pkg/target"
 
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
@@ -36,5 +38,11 @@ func main() {
 		return
 	}
 
+	if conn == nil {
+		log.Println("database connection is nil")
+		return
+	}
+
+	target.InitCache(context.TODO())
 	fmt.Println(conn)
 }
