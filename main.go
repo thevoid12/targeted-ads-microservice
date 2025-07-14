@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"net/http"
 	dbpkg "targetad/pkg/db"
 	"targetad/pkg/target"
+	"targetad/transport"
 
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
@@ -44,5 +45,7 @@ func main() {
 	}
 
 	target.InitCache(context.TODO())
-	fmt.Println(conn)
+
+	handler := transport.NewHTTPHandler()
+	log.Fatal(http.ListenAndServe(":8080", handler))
 }
