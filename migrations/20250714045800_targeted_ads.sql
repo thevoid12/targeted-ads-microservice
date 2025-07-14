@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS targeting_rules(
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    campaign_id uuid NOT NULL,
+    campaigns_id uuid NOT NULL, -- primary key from campaigns table
     is_included BOOLEAN NOT NULL, -- if false then exclude
     category INTEGER NOT NULL, -- category 1,2,3,4,5 1 for appID, 2 for Country, 3 for OS.
     value TEXT NOT NULL, -- value for the corresponding category, e.g. appID, country code, OS name
@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS targeting_rules(
 
 create TABLE IF NOT EXISTS campaigns(
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    campaign_string_id TEXT NOT NULL,
     name TEXT NOT NULL,
     image_url TEXT NOT NULL,
     CTA TEXT NOT NULL, -- Call to Action text

@@ -13,7 +13,6 @@ type TargetingData struct {
 	ExcludeCountryIndex map[string][]uuid.UUID
 	IncludeOSIndex      map[string][]uuid.UUID
 	IncludeAppIndex     map[string][]uuid.UUID
-	// MatchAllCampaigns   map[string]struct{}
 }
 
 type TargetCategory int
@@ -25,10 +24,23 @@ const (
 )
 
 type Campaign struct {
-	ID             uuid.UUID
-	Name           string
-	ImageUrl       string
-	CTA            string
-	ActivityStatus bool
-	IsDeleted      bool
+	ID               uuid.UUID
+	CampaignStringID string
+	Name             string
+	ImageUrl         string
+	CTA              string
+	ActivityStatus   bool
+	IsDeleted        bool
+}
+
+type DeliveryServiceRequest struct {
+	AppID   string
+	OS      string
+	Country string
+}
+
+type DeliveryServiceResponse struct {
+	CampaignStringID string
+	Image            string
+	Cta              string
 }

@@ -7,22 +7,23 @@ import (
 )
 
 const listAllValidCampaigns = `-- name: ListAllValidCampaigns :many
-SELECT id, name, image_url, cta, activity_status, created_at, created_by, updated_at, updated_by, is_deleted
+SELECT id, campaign_string_id, name, image_url, cta, activity_status, created_at, created_by, updated_at, updated_by, is_deleted
 FROM campaigns
 WHERE is_deleted = false
 `
 
 type Campaign struct {
-	ID             pgtype.UUID
-	Name           string
-	ImageUrl       string
-	Cta            string
-	ActivityStatus bool
-	CreatedAt      pgtype.Timestamp
-	CreatedBy      string
-	UpdatedAt      pgtype.Timestamp
-	UpdatedBy      string
-	IsDeleted      bool
+	ID               pgtype.UUID
+	CampaignStringID string
+	Name             string
+	ImageUrl         string
+	Cta              string
+	ActivityStatus   bool
+	CreatedAt        pgtype.Timestamp
+	CreatedBy        string
+	UpdatedAt        pgtype.Timestamp
+	UpdatedBy        string
+	IsDeleted        bool
 }
 
 func (conn *Dbconn) ListAllValidCampaigns(ctx context.Context) ([]Campaign, error) {
@@ -36,6 +37,7 @@ func (conn *Dbconn) ListAllValidCampaigns(ctx context.Context) ([]Campaign, erro
 		var i Campaign
 		if err := rows.Scan(
 			&i.ID,
+			&i.CampaignStringID,
 			&i.Name,
 			&i.ImageUrl,
 			&i.Cta,
@@ -57,16 +59,16 @@ func (conn *Dbconn) ListAllValidCampaigns(ctx context.Context) ([]Campaign, erro
 }
 
 const listValidTargetingRules = `-- name: ListValidTargetingRules :many
-SELECT campaign_id, is_included, category, value
+SELECT campaigns_id, is_included, category, value
 FROM targeting_rules
 WHERE is_deleted = false
 `
 
 type ListValidTargetingRulesRow struct {
-	CampaignID pgtype.UUID
-	IsIncluded bool
-	Category   int32
-	Value      string
+	CampaignsID pgtype.UUID
+	IsIncluded  bool
+	Category    int32
+	Value       string
 }
 
 func (conn *Dbconn) ListValidTargetingRules(ctx context.Context) ([]ListValidTargetingRulesRow, error) {
@@ -79,7 +81,7 @@ func (conn *Dbconn) ListValidTargetingRules(ctx context.Context) ([]ListValidTar
 	for rows.Next() {
 		var i ListValidTargetingRulesRow
 		if err := rows.Scan(
-			&i.CampaignID,
+			&i.CampaignsID,
 			&i.IsIncluded,
 			&i.Category,
 			&i.Value,

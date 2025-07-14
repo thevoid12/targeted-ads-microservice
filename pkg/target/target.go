@@ -33,12 +33,13 @@ func InitCache(ctx context.Context) (TargetCache *model.TargetingData, err error
 
 	for _, campaign := range campaigns {
 		TargetCache.Campaigns[campaign.ID.Bytes] = &model.Campaign{
-			ID:             campaign.ID.Bytes,
-			Name:           campaign.Name,
-			ImageUrl:       campaign.ImageUrl,
-			CTA:            campaign.Cta,
-			ActivityStatus: campaign.ActivityStatus,
-			IsDeleted:      campaign.IsDeleted,
+			ID:               campaign.ID.Bytes,
+			CampaignStringID: campaign.CampaignStringID,
+			Name:             campaign.Name,
+			ImageUrl:         campaign.ImageUrl,
+			CTA:              campaign.Cta,
+			ActivityStatus:   campaign.ActivityStatus,
+			IsDeleted:        campaign.IsDeleted,
 		}
 	}
 
@@ -51,17 +52,75 @@ func InitCache(ctx context.Context) (TargetCache *model.TargetingData, err error
 	for _, val := range dbvals {
 		switch val.Category {
 		case int32(model.TargetCategoryAppID):
-			TargetCache.IncludeAppIndex[val.Value] = append(TargetCache.IncludeAppIndex[val.Value], val.CampaignID.Bytes)
+			TargetCache.IncludeAppIndex[val.Value] = append(TargetCache.IncludeAppIndex[val.Value], val.CampaignsID.Bytes)
 		case int32(model.TargetCategoryCountry):
 			if val.IsIncluded {
-				TargetCache.IncludeCountryIndex[val.Value] = append(TargetCache.IncludeCountryIndex[val.Value], val.CampaignID.Bytes)
+				TargetCache.IncludeCountryIndex[val.Value] = append(TargetCache.IncludeCountryIndex[val.Value], val.CampaignsID.Bytes)
 			} else {
-				TargetCache.ExcludeCountryIndex[val.Value] = append(TargetCache.ExcludeCountryIndex[val.Value], val.CampaignID.Bytes)
+				TargetCache.ExcludeCountryIndex[val.Value] = append(TargetCache.ExcludeCountryIndex[val.Value], val.CampaignsID.Bytes)
 			}
 		case int32(model.TargetCategoryOS):
-			TargetCache.IncludeOSIndex[val.Value] = append(TargetCache.IncludeOSIndex[val.Value], val.CampaignID.Bytes)
+			TargetCache.IncludeOSIndex[val.Value] = append(TargetCache.IncludeOSIndex[val.Value], val.CampaignsID.Bytes)
 		}
 	}
 
 	return TargetCache, nil
+}
+
+// DeliveryService handles the delivery service request and returns the response based on the targeting rules
+// It checks the cache for the campaigns that match the request criteria and returns them.
+// I am iterating over the cache to find the campaigns that match the request criteria
+// I am using a map to ensure that each campaign is only returned once, even if it matches multiple criteria.
+// the reason behind this approach of iterating is because it is clearly meantioned in the requirements
+// that the number of campaings will be few thousands and the number of requests will be in millions
+// so this approach is efficient enough to handle the load.
+func DeliveryService(ctx context.Context, req *model.DeliveryServiceRequest) (res []*model.DeliveryServiceResponse, err error) {
+
+	uniqueCampaigns := make(map[uuid.UUID]bool)
+	TargetCache.TargetMutex.RLock()
+	defer TargetCache.TargetMutex.RUnlock()
+	// Check for AppID targeting
+	if appIDs, ok := TargetCache.IncludeAppIndex[req.AppID]; ok {
+		for _, campaignID := range appIDs {
+			if _, exists := uniqueCampaigns[campaignID]; !exists {
+				uniqueCampaigns[campaignID] = true
+			}
+		}
+	}
+	// Check for OS targeting
+	if osIDs, ok := TargetCache.IncludeOSIndex[req.OS]; ok {
+		for _, campaignID := range osIDs {
+			if _, exists := uniqueCampaigns[campaignID]; !exists {
+				uniqueCampaigns[campaignID] = true
+			}
+		}
+	}
+	// Check for Included Country targeting
+	if includedCountries, ok := TargetCache.IncludeCountryIndex[req.Country]; ok {
+		for _, campaignID := range includedCountries {
+			if _, exists := uniqueCampaigns[campaignID]; !exists {
+				uniqueCampaigns[campaignID] = true
+			}
+		}
+	}
+
+	// removing campaigns that are excluded based on country
+	if excludedCountries, ok := TargetCache.ExcludeCountryIndex[req.Country]; ok {
+		for _, campaignID := range excludedCountries {
+			delete(uniqueCampaigns, campaignID)
+		}
+	}
+
+	for campaignID := range uniqueCampaigns {
+		campaign, exists := TargetCache.Campaigns[campaignID]
+		if exists && campaign.ActivityStatus && !campaign.IsDeleted {
+			res = append(res, &model.DeliveryServiceResponse{
+				CampaignStringID: campaign.CampaignStringID,
+				Image:            campaign.ImageUrl,
+				Cta:              campaign.CTA,
+			})
+		}
+	}
+
+	return res, nil
 }
