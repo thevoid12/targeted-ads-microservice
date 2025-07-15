@@ -12,7 +12,7 @@
 ## idea and intution behind my design
 - The database layer uses PostgreSQL with Read Replicas. Since ad serving is a read-heavy operation, replicas allow us to scale database read capacity independently, preventing bottlenecks.
 - to ensure fast responses and up-to-date ad delivery, the system uses an event-driven cache invalidation mechanism.
-- In-Memory Cache: Each worker microservice holds the targeting rules in memory for sub-millisecond lookups, avoiding a database hit for every request.
+- In-Memory Cache via inverted indexing: Each worker microservice holds the targeting rules in memory for sub-millisecond lookups, avoiding a database hit for every request.
 - Database Change Detection: The Main Go Microservice (Leader) subscribes to the PostgreSQL database using its native LISTEN/NOTIFY feature. It gets immediate notifications whenever targeting rules are added or updated in the database.
 - Cache Propagation: Upon receiving a notification, the Leader fetches the new data and publishes it to a Redis Stream.
 - Real-time Worker Updates: All worker microservices are subscribed to this Redis Stream. They receive the update and instantly refresh their in-memory cache.
