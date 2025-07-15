@@ -58,7 +58,7 @@ func listen(ctx context.Context) error {
 			return fmt.Errorf("wait failed: %w", err)
 		}
 
-		log.Printf("Change received:")
+		log.Printf("Change received from pgsql:")
 		table, id, isdeleted, err := parsePgsqlNotificationPayload(notification.Payload)
 		if err != nil {
 			log.Printf("Error parsing notification payload: %v", err)
@@ -70,7 +70,7 @@ func listen(ctx context.Context) error {
 			continue
 		}
 
-		log.Printf("Pushed to Redis stream: %s:%s", table, id)
+		log.Printf("Pushed to Redis stream: %s:%s:%t", table, id, isdeleted)
 	}
 }
 
@@ -153,7 +153,7 @@ func StartRedisStreamListener(ctx context.Context) {
 			for _, message := range stream.Messages {
 				table := message.Values["table"].(string)
 				id := message.Values["id"].(string)
-				isDeleted := message.Values["is_deleted"].(bool)
+				isDeleted := message.Values["is_deleted"].(string) == "true"
 				log.Printf("Received message from stream %s: table=%s, id=%s, is_deleted =%t", stream.Stream, table, id, isDeleted)
 				// Process the message received from the stream
 				err = target.ProcessRedisStreamDataService(ctx, table, id, isDeleted)

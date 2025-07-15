@@ -7,7 +7,6 @@ import (
 	"targetad/pkg/target/model"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/pgtype"
 )
 
 var TargetCache *model.TargetingData // decaring the cache globally
@@ -84,10 +83,7 @@ func ProcessRedisStreamDataService(ctx context.Context, tableName string, id str
 			delete(TargetCache.Campaigns, uuid.MustParse(id))
 			TargetCache.TargetMutex.Unlock()
 		} else {
-			campaign, err := conn.GetCampaignByID(ctx, pgtype.UUID{
-				Bytes:  uuid.MustParse(id),
-				Status: 1,
-			})
+			campaign, err := conn.GetCampaignByID(ctx, uuid.MustParse(id))
 			if err != nil {
 				return err
 			}
@@ -104,10 +100,7 @@ func ProcessRedisStreamDataService(ctx context.Context, tableName string, id str
 			TargetCache.TargetMutex.Unlock()
 		}
 	case string(dbpkg.TargetingRulesTable):
-		targetRule, err := conn.GetTargetRulesByID(ctx, pgtype.UUID{
-			Bytes:  uuid.MustParse(id),
-			Status: 1,
-		})
+		targetRule, err := conn.GetTargetRulesByID(ctx, uuid.MustParse(id))
 		if err != nil {
 			return err
 		}

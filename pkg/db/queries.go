@@ -3,7 +3,7 @@ package dbpkg
 import (
 	"context"
 
-	"github.com/jackc/pgx/pgtype"
+	"github.com/google/uuid"
 )
 
 const getCampaignByID = `-- name: GetCampaignByID :one
@@ -12,7 +12,7 @@ FROM campaigns
 WHERE id= $1 AND is_deleted = false
 `
 
-func (conn *Dbconn) GetCampaignByID(ctx context.Context, id pgtype.UUID) (Campaign, error) {
+func (conn *Dbconn) GetCampaignByID(ctx context.Context, id uuid.UUID) (Campaign, error) {
 	row := conn.Db.QueryRow(ctx, getCampaignByID, id)
 	var i Campaign
 	err := row.Scan(
@@ -37,7 +37,7 @@ FROM targeting_rules
 WHERE id= $1 AND is_deleted = false
 `
 
-func (conn *Dbconn) GetTargetRulesByID(ctx context.Context, id pgtype.UUID) (TargetingRule, error) {
+func (conn *Dbconn) GetTargetRulesByID(ctx context.Context, id uuid.UUID) (TargetingRule, error) {
 	row := conn.Db.QueryRow(ctx, getTargetRulesByID, id)
 	var i TargetingRule
 	err := row.Scan(
