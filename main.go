@@ -46,6 +46,10 @@ func main() {
 
 	target.InitCache(context.TODO())
 
+	go dbpkg.ListenForNewDataInPgsql(context.TODO())
+
 	handler := transport.NewHTTPHandler()
 	log.Fatal(http.ListenAndServe(":8080", handler))
+
+	// select {}
 }

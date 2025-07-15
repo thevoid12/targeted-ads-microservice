@@ -14,8 +14,9 @@
 - [ ] remove errorf statement and add logger for pgsql db
 - [x] we need 2 tables 1. targeting rules,2.campaign details targetting rules will have campign id as foreign key
 - [x] select all data from postgres and create our inmemory inverted index cache on restarts
-- [ ] write the main logic using gokit format 
+- [x] write the main logic using gokit format 
 - [ ] redis stream setup
 - [ ] notfication when pg db is updated
 - [ ] tests for all of it
 - [ ] updating the cache without reloading based on redis stream
+- [ ] change context.TODO to appropriate context

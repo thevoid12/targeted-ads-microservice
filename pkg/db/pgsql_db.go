@@ -125,6 +125,48 @@ func InitDB() (*Dbconn, error) {
 func GetConn() *Dbconn {
 	return dbConn
 }
+
+// listenForNewDataInPgsql listens for new data's <tablename:primarykey> in PostgreSQL and once new data lands on our 2 tables
+// it will write into our redis stream which all the microservices can listen to and update their cache with the latest data
+func ListenForNewDataInPgsql(ctx context.Context) {
+	for {
+		err := listen(ctx)
+		log.Printf("listener stopped: %v. Reconnecting in 2s...", err)
+		time.Sleep(2 * time.Second)
+	}
+}
+
+// I am creating a new db connection here because if the connection is lost in our infinite loop
+// I will reconnect it. I am not adding this as part of the InitDB pool function because
+// I want to keep the connection pool alive and not close it unlike init db's pool which closes and the connections in the pool
+func listen(ctx context.Context) error {
+	config := loadEnv()
+
+	targetDSN := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
+		config.User, config.Password, config.Host, config.Port, config.Name, config.SSLMode)
+
+	conn, err := pgx.Connect(ctx, targetDSN)
+	if err != nil {
+		dbErr = fmt.Errorf("failed to connect to PostgreSQL: %v", err)
+		return dbErr
+	}
+	_, err = conn.Exec(ctx, "LISTEN table_changes;")
+	if err != nil {
+		return fmt.Errorf("listen exec: %w", err)
+	}
+
+	log.Println("Connected and listening on 'table_changes'...")
+
+	for {
+		notification, err := conn.WaitForNotification(ctx)
+		if err != nil {
+			return fmt.Errorf("wait failed: %w", err)
+		}
+
+		log.Printf("Change received: %s", notification.Payload)
+	}
+}
+
 func databaseExists(ctx context.Context, conn *pgx.Conn, name string) (bool, error) {
 	var exists bool
 	err := conn.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname=$1)", name).Scan(&exists)
