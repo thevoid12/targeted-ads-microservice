@@ -45,8 +45,12 @@ func main() {
 	}
 
 	target.InitCache(context.TODO())
-
-	go dbpkg.ListenForNewDataInPgsql(context.TODO())
+	// not all microservices need to listen for new data in pgsql and push it to redis stream
+	// the others will just listen to the redis stream for new data and update its cache
+	if viper.GetBool("app.isNotifyableMicroservice") {
+		log.Println("this is a notifyable microservice, listening for new data in pgsql")
+		go dbpkg.ListenForNewDataInPgsql(context.TODO())
+	}
 
 	handler := transport.NewHTTPHandler()
 	log.Fatal(http.ListenAndServe(":8080", handler))

@@ -1,6 +1,7 @@
 {
     "app":{
-        "env":".env"
+        "env":".env",
+        "isNotifyableMicroservice":true
     },
     "pgsql":{
         "maxconn":50,
