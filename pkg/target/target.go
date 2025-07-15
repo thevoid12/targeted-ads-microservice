@@ -10,10 +10,11 @@ import (
 	"github.com/jackc/pgx/pgtype"
 )
 
-var TargetCache model.TargetingData // decaring the cache globally
+var TargetCache *model.TargetingData // decaring the cache globally
 
 // fetches the data from pgsql db and initializes the cache
-func InitCache(ctx context.Context) (TargetCache *model.TargetingData, err error) {
+func InitCache(ctx context.Context) (*model.TargetingData, error) {
+	TargetCache = &model.TargetingData{}
 	conn := dbpkg.GetConn()
 	if conn == nil {
 		return nil, errors.New("database connection is nil")

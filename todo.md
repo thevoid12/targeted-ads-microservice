@@ -18,5 +18,6 @@
 - [x] redis stream setup
 - [x] notfication when pg db is updated
 - [ ] tests for all of it
-- [ ] updating the cache without reloading based on redis stream
+- [x] updating the cache without reloading based on redis stream
+- [ ] send the result back to the client after the fetch from the cache
 - [ ] change context.TODO to appropriate context

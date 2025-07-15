@@ -11,6 +11,7 @@
         "maxConnIdleTime":5
     },
     "redis":{
+        "address":"127.0.0.1:6379",
         "db":0,
         "dialTimeout":5,
         "poolSize":10,
