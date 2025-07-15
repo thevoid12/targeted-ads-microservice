@@ -3,12 +3,12 @@
 - [x] design
 - [x] choose db
 - [x] choose a cache
-- [ ] insert random data
-- [ ] implement core go logic
-- [ ] implement updating cache when db changes
+- [x] insert random data
+- [x] implement core go logic
+- [x] implement updating cache when db changes
 - [ ] write unit test
 - [ ] add grafana 
-- [ ] update readme 
+- [x] update readme 
 
 # micro level todos
 - [ ] remove errorf statement and add logger for pgsql db
@@ -19,5 +19,5 @@
 - [x] notfication when pg db is updated
 - [ ] tests for all of it
 - [x] updating the cache without reloading based on redis stream
-- [ ] send the result back to the client after the fetch from the cache
-- [ ] change context.TODO to appropriate context
+- [x] send the result back to the client after the fetch from the cache
+- [x] change context.TODO to appropriate context
