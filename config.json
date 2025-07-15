@@ -8,5 +8,13 @@
         "healthCheckPeriod":"30",
         "maxConnLifetime":"30",
         "maxConnIdleTime":"5"
+    },
+    "redis":{
+        "db":0,
+        "dialTimeout":"5",
+        "poolSize":10,
+        "minIdleConns":2,
+        "readTimeout":"5",
+        "writeTimeout":"5"
     }
 }
