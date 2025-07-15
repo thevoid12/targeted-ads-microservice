@@ -16,6 +16,19 @@ type Campaign struct {
 	IsDeleted        bool
 }
 
+type TargetingRule struct {
+	ID          pgtype.UUID
+	CampaignsID pgtype.UUID
+	IsIncluded  bool
+	Category    int32
+	Value       string
+	CreatedAt   pgtype.Timestamp
+	CreatedBy   string
+	UpdatedAt   pgtype.Timestamp
+	UpdatedBy   string
+	IsDeleted   bool
+}
+
 type ListValidTargetingRulesRow struct {
 	CampaignsID pgtype.UUID
 	IsIncluded  bool

@@ -50,7 +50,7 @@ func main() {
 	// the others will just listen to the redis stream for new data and update its cache
 	if viper.GetBool("app.isNotifyableMicroservice") {
 		log.Println("this is a notifyable microservice, listening for new data in pgsql")
-		go dbpkg.ListenForNewDataInPgsql(context.TODO())
+		go redisstream.ListenForNewDataInPgsql(context.TODO())
 	}
 
 	go redisstream.StartRedisStreamListener(context.TODO())

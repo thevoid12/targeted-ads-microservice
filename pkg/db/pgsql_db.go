@@ -7,8 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
-	"targetad/pkg/redisstream"
 
 	"os"
 	"sync"
@@ -45,7 +43,7 @@ var (
 // loadEnv loads environment variables from the .env file
 // NOTE: for this demonstation I am using .env file for secret managements instead of using a secret manager. If production system
 // I would definitely use a secret manager like AWS Secrets Manager or HashiCorp Vault.
-func loadEnv() DBConfig {
+func LoadEnv() DBConfig {
 	_ = godotenv.Load()
 
 	return DBConfig{
@@ -63,7 +61,7 @@ func loadEnv() DBConfig {
 // and will not reinitialize the connection.
 func InitDB() (*Dbconn, error) {
 	dbOnce.Do(func() {
-		config := loadEnv()
+		config := LoadEnv()
 
 		defaultDSN := fmt.Sprintf("postgres://%s:%s@%s:%s/postgres?sslmode=%s",
 			config.User, config.Password, config.Host, config.Port, config.SSLMode)
@@ -126,70 +124,6 @@ func InitDB() (*Dbconn, error) {
 
 func GetConn() *Dbconn {
 	return dbConn
-}
-
-// listenForNewDataInPgsql listens for new data's <tablename:primarykey> in PostgreSQL and once new data lands on our 2 tables
-// it will write into our redis stream which all the microservices can listen to and update their cache with the latest data
-func ListenForNewDataInPgsql(ctx context.Context) {
-	for {
-		err := listen(ctx)
-		log.Printf("listener stopped: %v. Reconnecting in 2s...", err)
-		time.Sleep(2 * time.Second)
-	}
-}
-
-// I am creating a new db connection here because if the connection is lost in our infinite loop
-// I will reconnect it. I am not adding this as part of the InitDB pool function because
-// I want to keep the connection pool alive and not close it unlike init db's pool which closes and the connections in the pool
-func listen(ctx context.Context) error {
-	config := loadEnv()
-
-	targetDSN := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		config.User, config.Password, config.Host, config.Port, config.Name, config.SSLMode)
-
-	conn, err := pgx.Connect(ctx, targetDSN)
-	if err != nil {
-		dbErr = fmt.Errorf("failed to connect to PostgreSQL: %v", err)
-		return dbErr
-	}
-	_, err = conn.Exec(ctx, "LISTEN table_changes;")
-	if err != nil {
-		return fmt.Errorf("listen exec: %w", err)
-	}
-
-	log.Println("Connected and listening on 'table_changes'...")
-
-	for {
-		notification, err := conn.WaitForNotification(ctx)
-		if err != nil {
-			return fmt.Errorf("wait failed: %w", err)
-		}
-
-		log.Printf("Change received:")
-		table, id, isdeleted, err := parsePgsqlNotificationPayload(notification.Payload)
-		if err != nil {
-			log.Printf("Error parsing notification payload: %v", err)
-			continue
-		}
-		err = redisstream.PushToRedisStream(table, id, isdeleted)
-		if err != nil { // TODO: if it fails to push to redis stream we need to store the data in a queue and retry later
-			log.Printf("Error pushing to Redis stream: %v", err)
-			continue
-		}
-
-		log.Printf("Pushed to Redis stream: %s:%s", table, id)
-	}
-}
-
-func parsePgsqlNotificationPayload(payload string) (string, string, bool, error) {
-	parts := strings.Split(payload, ":") // i am very sure the payload will be in the format of <table_name:primary_key:is_deleted>
-	if len(parts) != 3 {
-		return "", "", false, fmt.Errorf("invalid payload format: %s", payload)
-	}
-	tableName := parts[0]
-	primaryKey := parts[1]
-	isdeleted := parts[2] == "TRUE"
-	return tableName, primaryKey, isdeleted, nil
 }
 
 func databaseExists(ctx context.Context, conn *pgx.Conn, name string) (bool, error) {

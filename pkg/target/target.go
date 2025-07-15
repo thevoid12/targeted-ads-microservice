@@ -7,6 +7,7 @@ import (
 	"targetad/pkg/target/model"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/pgtype"
 )
 
 var TargetCache model.TargetingData // decaring the cache globally
@@ -67,8 +68,70 @@ func InitCache(ctx context.Context) (TargetCache *model.TargetingData, err error
 	return TargetCache, nil
 }
 
-// ProcessRedisStreamDataService is afunction for processing data from the Redis stream.
-func ProcessRedisStreamDataService(ctx context.Context, tableName string, id string) error {
+// ProcessRedisStreamDataService is a function for processing data from the Redis stream.
+func ProcessRedisStreamDataService(ctx context.Context, tableName string, id string, isDeleted bool) error {
+
+	conn := dbpkg.GetConn()
+	if conn == nil {
+		return errors.New("database connection is nil")
+	}
+
+	switch tableName {
+	case string(dbpkg.CampaignsTable):
+		if isDeleted {
+			TargetCache.TargetMutex.Lock()
+			delete(TargetCache.Campaigns, uuid.MustParse(id))
+			TargetCache.TargetMutex.Unlock()
+		} else {
+			campaign, err := conn.GetCampaignByID(ctx, pgtype.UUID{
+				Bytes:  uuid.MustParse(id),
+				Status: 1,
+			})
+			if err != nil {
+				return err
+			}
+			TargetCache.TargetMutex.Lock()
+			TargetCache.Campaigns[campaign.ID.Bytes] = &model.Campaign{
+				ID:               campaign.ID.Bytes,
+				CampaignStringID: campaign.CampaignStringID,
+				Name:             campaign.Name,
+				ImageUrl:         campaign.ImageUrl,
+				CTA:              campaign.Cta,
+				ActivityStatus:   campaign.ActivityStatus,
+				IsDeleted:        campaign.IsDeleted,
+			}
+			TargetCache.TargetMutex.Unlock()
+		}
+	case string(dbpkg.TargetingRulesTable):
+		targetRule, err := conn.GetTargetRulesByID(ctx, pgtype.UUID{
+			Bytes:  uuid.MustParse(id),
+			Status: 1,
+		})
+		if err != nil {
+			return err
+		}
+		TargetCache.TargetMutex.Lock()
+		defer TargetCache.TargetMutex.Unlock()
+		switch targetRule.Category {
+		case int32(model.TargetCategoryAppID):
+			TargetCache.IncludeAppIndex[targetRule.Value] = append(TargetCache.IncludeAppIndex[targetRule.Value], targetRule.CampaignsID.Bytes)
+		case int32(model.TargetCategoryCountry):
+			if targetRule.IsIncluded {
+				TargetCache.IncludeCountryIndex[targetRule.Value] = append(TargetCache.IncludeCountryIndex[targetRule.Value], targetRule.CampaignsID.Bytes)
+			} else {
+				TargetCache.ExcludeCountryIndex[targetRule.Value] = append(TargetCache.ExcludeCountryIndex[targetRule.Value], targetRule.CampaignsID.Bytes)
+			}
+		case int32(model.TargetCategoryOS):
+			TargetCache.IncludeOSIndex[targetRule.Value] = append(TargetCache.IncludeOSIndex[targetRule.Value], targetRule.CampaignsID.Bytes)
+		}
+
+		if isDeleted {
+			// TODO: do the same check and remove the campaign from the cache
+		}
+	default:
+		return errors.New("unknown table name")
+	}
+
 	return nil
 }
 

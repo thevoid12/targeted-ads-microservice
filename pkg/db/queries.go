@@ -2,7 +2,58 @@ package dbpkg
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/pgtype"
 )
+
+const getCampaignByID = `-- name: GetCampaignByID :one
+SELECT id, campaign_string_id, name, image_url, cta, activity_status, created_at, created_by, updated_at, updated_by, is_deleted
+FROM campaigns
+WHERE id= $1 AND is_deleted = false
+`
+
+func (conn *Dbconn) GetCampaignByID(ctx context.Context, id pgtype.UUID) (Campaign, error) {
+	row := conn.Db.QueryRow(ctx, getCampaignByID, id)
+	var i Campaign
+	err := row.Scan(
+		&i.ID,
+		&i.CampaignStringID,
+		&i.Name,
+		&i.ImageUrl,
+		&i.Cta,
+		&i.ActivityStatus,
+		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.UpdatedAt,
+		&i.UpdatedBy,
+		&i.IsDeleted,
+	)
+	return i, err
+}
+
+const getTargetRulesByID = `-- name: GetTargetRulesByID :one
+SELECT id, campaigns_id, is_included, category, value, created_at, created_by, updated_at, updated_by, is_deleted
+FROM targeting_rules
+WHERE id= $1 AND is_deleted = false
+`
+
+func (conn *Dbconn) GetTargetRulesByID(ctx context.Context, id pgtype.UUID) (TargetingRule, error) {
+	row := conn.Db.QueryRow(ctx, getTargetRulesByID, id)
+	var i TargetingRule
+	err := row.Scan(
+		&i.ID,
+		&i.CampaignsID,
+		&i.IsIncluded,
+		&i.Category,
+		&i.Value,
+		&i.CreatedAt,
+		&i.CreatedBy,
+		&i.UpdatedAt,
+		&i.UpdatedBy,
+		&i.IsDeleted,
+	)
+	return i, err
+}
 
 const listAllValidCampaigns = `-- name: ListAllValidCampaigns :many
 SELECT id, campaign_string_id, name, image_url, cta, activity_status, created_at, created_by, updated_at, updated_by, is_deleted
