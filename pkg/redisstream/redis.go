@@ -48,13 +48,14 @@ func initRedisGroup() error {
 	return nil
 }
 
-func PushToRedisStream(table string, id string) error {
+func PushToRedisStream(table string, id string, isDeleted bool) error {
 	_, err := RedisClient.XAdd(ctx, &redis.XAddArgs{
 		Stream: viper.GetString("redis.redisStream.streamName"),
 		Values: map[string]interface{}{
-			"table": table,
-			"id":    id,
-			"ts":    time.Now().UnixMilli(),
+			"table":      table,
+			"id":         id,
+			"is_deleted": isDeleted,
+			"ts":         time.Now().UnixMilli(),
 		},
 	}).Result()
 	return err

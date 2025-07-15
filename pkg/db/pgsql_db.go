@@ -166,12 +166,12 @@ func listen(ctx context.Context) error {
 		}
 
 		log.Printf("Change received:")
-		table, id, err := parsePgsqlNotificationPayload(notification.Payload)
+		table, id, isdeleted, err := parsePgsqlNotificationPayload(notification.Payload)
 		if err != nil {
 			log.Printf("Error parsing notification payload: %v", err)
 			continue
 		}
-		err = redisstream.PushToRedisStream(table, id)
+		err = redisstream.PushToRedisStream(table, id, isdeleted)
 		if err != nil { // TODO: if it fails to push to redis stream we need to store the data in a queue and retry later
 			log.Printf("Error pushing to Redis stream: %v", err)
 			continue
@@ -181,14 +181,15 @@ func listen(ctx context.Context) error {
 	}
 }
 
-func parsePgsqlNotificationPayload(payload string) (string, string, error) {
+func parsePgsqlNotificationPayload(payload string) (string, string, bool, error) {
 	parts := strings.Split(payload, ":")
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("invalid payload format: %s", payload)
+	if len(parts) != 3 {
+		return "", "", false, fmt.Errorf("invalid payload format: %s", payload)
 	}
 	tableName := parts[0]
 	primaryKey := parts[1]
-	return tableName, primaryKey, nil
+	isdeleted := parts[2] == "TRUE"
+	return tableName, primaryKey, isdeleted, nil
 }
 
 func databaseExists(ctx context.Context, conn *pgx.Conn, name string) (bool, error) {

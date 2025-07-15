@@ -31,14 +31,17 @@ create TABLE IF NOT EXISTS campaigns (
 CREATE OR REPLACE FUNCTION notify_change_with_id() RETURNS TRIGGER AS $$
 DECLARE
     row_id TEXT;
+    is_deleted BOOLEAN;
 BEGIN
     IF TG_OP = 'DELETE' THEN
         row_id := OLD.id::TEXT;
+        is_deleted := TRUE;
     ELSE
         row_id := NEW.id::TEXT;
+        is_deleted := FALSE;
     END IF;
 
-    PERFORM pg_notify('table_changes', TG_TABLE_NAME || ':' || row_id);
+    PERFORM pg_notify('table_changes', TG_TABLE_NAME || ':' || row_id || ':' || is_deleted::TEXT);
 
     RETURN NEW;
 END;
