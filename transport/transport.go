@@ -3,6 +3,7 @@ package transport
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"targetad/endpoint"
@@ -26,7 +27,10 @@ func NewHTTPHandler() http.Handler {
 func decodeDeliveryAdsRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var req model.DeliveryServiceRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
-	return req, err
+	if err != nil {
+		return nil, fmt.Errorf("error decoding the input request: %s", err)
+	}
+	return req, nil
 }
 
 func encodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {

@@ -34,13 +34,13 @@ type Campaign struct {
 }
 
 type DeliveryServiceRequest struct {
-	AppID   string
-	OS      string
-	Country string
+	AppID   string `json:"app" validate:"required"`
+	OS      string `json:"os" validate:"required"`
+	Country string `json:"country" validate:"required"`
 }
 
 type DeliveryServiceResponse struct {
-	CampaignStringID string
-	Image            string
-	Cta              string
+	CampaignStringID string `json:"cid"`
+	Image            string `json:"img"`
+	Cta              string `json:"cta"`
 }
