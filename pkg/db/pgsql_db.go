@@ -182,7 +182,7 @@ func listen(ctx context.Context) error {
 }
 
 func parsePgsqlNotificationPayload(payload string) (string, string, bool, error) {
-	parts := strings.Split(payload, ":")
+	parts := strings.Split(payload, ":") // i am very sure the payload will be in the format of <table_name:primary_key:is_deleted>
 	if len(parts) != 3 {
 		return "", "", false, fmt.Errorf("invalid payload format: %s", payload)
 	}
