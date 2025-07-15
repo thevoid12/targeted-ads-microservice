@@ -2,8 +2,6 @@ package dbpkg
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/pgtype"
 )
 
 const listAllValidCampaigns = `-- name: ListAllValidCampaigns :many
@@ -11,20 +9,6 @@ SELECT id, campaign_string_id, name, image_url, cta, activity_status, created_at
 FROM campaigns
 WHERE is_deleted = false
 `
-
-type Campaign struct {
-	ID               pgtype.UUID
-	CampaignStringID string
-	Name             string
-	ImageUrl         string
-	Cta              string
-	ActivityStatus   bool
-	CreatedAt        pgtype.Timestamp
-	CreatedBy        string
-	UpdatedAt        pgtype.Timestamp
-	UpdatedBy        string
-	IsDeleted        bool
-}
 
 func (conn *Dbconn) ListAllValidCampaigns(ctx context.Context) ([]Campaign, error) {
 	rows, err := conn.Db.Query(ctx, listAllValidCampaigns)
@@ -63,13 +47,6 @@ SELECT campaigns_id, is_included, category, value
 FROM targeting_rules
 WHERE is_deleted = false
 `
-
-type ListValidTargetingRulesRow struct {
-	CampaignsID pgtype.UUID
-	IsIncluded  bool
-	Category    int32
-	Value       string
-}
 
 func (conn *Dbconn) ListValidTargetingRules(ctx context.Context) ([]ListValidTargetingRulesRow, error) {
 	rows, err := conn.Db.Query(ctx, listValidTargetingRules)

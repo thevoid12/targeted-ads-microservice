@@ -6,16 +6,23 @@
     "pgsql":{
         "maxconn":50,
         "minconn":5,
-        "healthCheckPeriod":"30",
-        "maxConnLifetime":"30",
-        "maxConnIdleTime":"5"
+        "healthCheckPeriod":30,
+        "maxConnLifetime":30,
+        "maxConnIdleTime":5
     },
     "redis":{
         "db":0,
-        "dialTimeout":"5",
+        "dialTimeout":5,
         "poolSize":10,
         "minIdleConns":2,
-        "readTimeout":"5",
-        "writeTimeout":"5"
+        "readTimeout":5,
+        "writeTimeout":5,
+        "redisStream":{
+            "streamName":"targeted_ads_stream",
+            "consumerGroup":"targeted_ads_group",
+            "consumerName":"targeted_ads_consumer",
+            "consumerBlock":0,
+            "consumerCount":10
+        }
     }
 }

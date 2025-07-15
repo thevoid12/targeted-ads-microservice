@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	dbpkg "targetad/pkg/db"
+	"targetad/pkg/redisstream"
 	"targetad/pkg/target"
 	"targetad/transport"
 
@@ -52,6 +53,7 @@ func main() {
 		go dbpkg.ListenForNewDataInPgsql(context.TODO())
 	}
 
+	go redisstream.StartRedisStreamListener(context.TODO())
 	handler := transport.NewHTTPHandler()
 	log.Fatal(http.ListenAndServe(":8080", handler))
 

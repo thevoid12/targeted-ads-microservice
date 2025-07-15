@@ -67,6 +67,11 @@ func InitCache(ctx context.Context) (TargetCache *model.TargetingData, err error
 	return TargetCache, nil
 }
 
+// ProcessRedisStreamDataService is afunction for processing data from the Redis stream.
+func ProcessRedisStreamDataService(ctx context.Context, tableName string, id string) error {
+	return nil
+}
+
 // DeliveryService handles the delivery service request and returns the response based on the targeting rules
 // It checks the cache for the campaigns that match the request criteria and returns them.
 // I am iterating over the cache to find the campaigns that match the request criteria
