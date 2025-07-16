@@ -24,7 +24,6 @@ func InitCache(ctx context.Context) (*model.TargetingData, error) {
 		return nil, err
 	}
 	TargetCache.TargetMutex.Lock()
-	defer TargetCache.TargetMutex.Unlock()
 
 	TargetCache.Campaigns = make(map[uuid.UUID]*model.Campaign)
 	TargetCache.ExcludeCountryIndex = make(map[string][]uuid.UUID)
@@ -43,13 +42,13 @@ func InitCache(ctx context.Context) (*model.TargetingData, error) {
 			IsDeleted:        campaign.IsDeleted,
 		}
 	}
-
+	TargetCache.TargetMutex.Unlock()
 	// get all valid targetting rules from the database
 	dbvals, err := conn.ListValidTargetingRules(ctx)
 	if err != nil {
 		return nil, err
 	}
-
+	TargetCache.TargetMutex.Lock()
 	for _, val := range dbvals {
 		switch val.Category {
 		case int32(model.TargetCategoryAppID):
@@ -64,6 +63,7 @@ func InitCache(ctx context.Context) (*model.TargetingData, error) {
 			TargetCache.IncludeOSIndex[val.Value] = append(TargetCache.IncludeOSIndex[val.Value], val.CampaignsID.Bytes)
 		}
 	}
+	TargetCache.TargetMutex.Unlock()
 
 	return TargetCache, nil
 }
@@ -130,7 +130,7 @@ func ProcessRedisStreamDataService(ctx context.Context, tableName string, id str
 }
 
 // DeliveryService handles the delivery service request and returns the response based on the targeting rules
-// It checks the cache for the campaigns that match the request criteria and returns them.
+// I am trying to use inverted indexing. It checks the cache for the campaigns that match the request criteria and returns them.
 // I am iterating over the cache to find the campaigns that match the request criteria
 // I am using a map to ensure that each campaign is only returned once, even if it matches multiple criteria.
 // the reason behind this approach of iterating is because it is clearly meantioned in the requirements
