@@ -55,5 +55,5 @@ curl -X POST \
 
 # additional improvements
 - extensive logging
-- monitoring
+- monitoring - (will be adding these by end of the day)
 - load testing and additional unit testing
